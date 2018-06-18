@@ -339,7 +339,7 @@ class VisaoJogo(object):
     def __init__(self, width=640, height=400, fps=30):
         """Inicializa pygame, janela, fundo, fonte"""
         pygame.init()
-        pygame.display.set_caption("Aperte ESC para sair")
+        pygame.display.set_caption("ESC para sair")
         self.width = width
         self.height = height
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.DOUBLEBUF)
@@ -516,10 +516,10 @@ class VisaoJogo(object):
         self.titulo_surface = font.render('CONNECT 4', True, PRETO)
         fw, fh = font.size('CONNECT 4')
         self.background.blit(self.titulo_surface, ((self.width - fw) // 2, 150))
-        texto_dois_jogadores = 'Modo de 2 Jogadores'
-        texto_pc_jogador = 'VS PC'
+        texto_dois_jogadores = '2 Jogadores'
+        texto_pc_jogador = 'vs PC'
         texto_treino = 'Treinar PC'
-        texto_sair = 'SAIR'
+        texto_sair = 'Sair'
         font = pygame.font.SysFont('mono', 40, bold=True)
 
         self.play_surface = font.render(texto_dois_jogadores, True, PRETO)
