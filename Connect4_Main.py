@@ -12,7 +12,7 @@ TAMANHO_BORDA = (7, 6)
 
 class ColunaPreenchidaTotalmente(Exception):
 
-    def inicia(self, valor):
+    def __init__(self, valor):
         self.valor = valor
 
     def __str__(self):
@@ -22,7 +22,7 @@ class EspacoMoedas():
 
     TAMANHO = 80
 
-    def inicia (self, linha_index, coluna_index, width, height, x1, y1):
+    def __init__(self, linha_index, coluna_index, width, height, x1, y1):
         self.content = 0
         self.linha_index = linha_index
         self.coluna_index = coluna_index
@@ -49,13 +49,13 @@ class EspacoMoedas():
 
     def desenha(self, background):
         pygame.draw.rect(self.surface, VERDE, (0, 0, self.width, self.heigth))
-        pygame.draw.reat(self.surface, BRANCO, (1, 1, self.width - 2, self.heigth -2))
+        pygame.draw.rect(self.surface, BRANCO, (1, 1, self.width - 2, self.heigth -2))
         self.surface = self.surface.convert()
         background.blit(self.surface, (self.x_pos, self.y_pos))
 
 class RastreadorNodo():
 
-    def inicia(self):
+    def __init__(self):
         self.top_left = None
         self.top_right = None
         self.top = None
@@ -80,7 +80,7 @@ class Borda():
     MARGE_X = 350
     MARGE_Y = 150
 
-    def inicia (self, numero_linhas, numero_colunas):
+    def __init__(self, numero_linhas, numero_colunas):
         self.container = [[EspacoMoedas(i, j, EspacoMoedas.TAMANHO, EspacoMoedas.TAMANHO,
                                         j * EspacoMoedas.TAMANHO + Borda.MARGE_X,
                                         i * EspacoMoedas.TAMANHO + Borda.MARGE_Y)
@@ -127,7 +127,7 @@ class Borda():
     def desenha(self, background):
         for i in range(self.numero_linhas):
             for j in range(self.numero_colunas):
-                self.container[i][j].draw(background)
+                self.container[i][j].desenha(background)
 
     def get_espaco(self, linha_index, coluna_index):
         return self.container[linha_index][coluna_index]
@@ -147,7 +147,7 @@ class Borda():
         if not self.checa_coluna_preenchida(numero_coluna):
             linha_index = self.determina_linha_para_inserir(numero_coluna)
             self.container[linha_index][numero_coluna].set_moeda(moeda)
-            if (self.movimento_anterior[0] == None):
+            if self.movimento_anterior[0] == None:
                 self.estado_anterior = [[0 for j in range(self.numero_colunas)] for i in range(self.numero_linhas)]
             else:
                 (linha_anterior, coluna_anterior, valor) = self.movimento_anterior
@@ -159,7 +159,7 @@ class Borda():
             self.ultimo_valor = moeda.get_tipo_moeda()
             moeda.solta(background, linha_index)
         else:
-            raise  ColunaPreenchidaTotalmente('Coluna já está preenchida!')
+            raise ColunaPreenchidaTotalmente('Coluna já está preenchida!')
 
         result = logica_jogo.checa_fim_de_jogo()
 
@@ -168,9 +168,9 @@ class Borda():
     def determina_linha_para_inserir(self, numero_coluna):
         for i in range(len(self.container)):
             if self.container[i][numero_coluna].checa_espaco_preenchido():
-                return (i - 1)
+                return i - 1
 
-        return  self.numero_linhas - 1
+        return self.numero_linhas - 1
 
     def get_dimensoes(self):
         return (self.numero_linhas, self.numero_colunas)
@@ -274,6 +274,64 @@ class Borda():
                 if not nodo_bottom_rigth.visited:
                     self.traverse(nodo_bottom_rigth, valor_desejado, i + 1, j + 1, nodos_visitados)
 
+class Moeda():
+
+    RAIO = 30
+
+    def __init__(self, tipo_moeda):
+        self.tipo_moeda = tipo_moeda
+        self.surface = pygame.Surface((EspacoMoedas.TAMANHO - 3, EspacoMoedas.TAMANHO - 3))
+        if self.tipo_moeda == 1:
+            self.cor = AZUL
+        else:
+            self.cor = VERMELHO
+
+    def set_posicao(self, x1, y1):
+        self.x_pos = x1
+        self.y_pos = y1
+
+    def set_coluna(self, coluna):
+        self.coluna = coluna
+
+    def get_coluna(self):
+        return self.coluna
+
+    def set_linha(self, linha):
+        self.linha = linha
+
+    def get_linha(self):
+        return  self.linha
+
+    def mover_direita(self, background, step=1):
+        self.set_coluna(self.coluna + 1)
+        self.surface.fill((0, 0, 0))
+        background.blit(self.surface, (self.x_pos, self.y_pos))
+        self.set_posicao(self.x_pos + step * EspacoMoedas.TAMANHO, self.y_pos)
+        self.desenha(background)
+
+    def mover_esquerda(self, background):
+        self.set_coluna(self.coluna - 1)
+        self.surface.fill((0, 0, 0))
+        background.blit(self.surface, (self.x_pos, self.y_pos))
+        self.set_posicao(self.x_pos - EspacoMoedas.TAMANHO, self.y_pos)
+        self.desenha(background)
+
+    def solta(self, background, numero_linha):
+        self.set_linha(numero_linha)
+        self.surface.fill((0, 0, 0))
+        background.blit(self.surface, (self.x_pos, self.y_pos))
+        self.set_posicao(self.x_pos, self.y_pos + ((self.row + 1) * EspacoMoedas.TAMANHO))
+        self.surface.fill((255, 255, 255))
+        background.blit(self.surface, (self.x_pos, self.y_pos))
+        self.desenha(background)
+
+    def get_tipo_moeda(self):
+        return  self.tipo_moeda
+
+    def desenha(self, background):
+        pygame.draw.circle(self.surface, self.cor, (EspacoMoedas.TAMANHO // 2, EspacoMoedas.TAMANHO // 2), Moeda.RAIO)
+        self.surface = self.surface.convert()
+        background.blit(self.surface, (self.x_pos, self.y_pos))
 
 
 class VisaoJogo(object):
@@ -362,8 +420,96 @@ class VisaoJogo(object):
             self.run(modo_jogo)
 
     def run(self, modo_jogo, iteracoes=1):
+        """Principal loop no jogo"""
+        while(iteracoes > 0):
+            self.inicializa_variaveis(modo_jogo)
+            self.background.fill(PRETO)
+            self.borda_do_jogo.desenha(self.background)
+            fim_de_jogo = False
+            fim_de_turno = False
+            nao_inicializado = True
+            tipo_atual = random.randint(1, 2)
+            if modo_jogo == "sozinho":
+                turno_humano = (self.p1.get_tipo_moeda() == tipo_atual)
+            elif modo_jogo == "2_player":
+                turno_humano = True
+            else:
+                turno_humano = False
 
+            turno_p1 = (self.p1.get_tipo_moeda() == tipo_atual)
 
+            (primeiro_espaco_X, primeiro_espaco_Y) = self.borda_do_jogo.get_espaco(0, 0).get_posicao()
+            moeda = Moeda(tipo_atual)
+            tela_fim_de_jogo = False
+
+            while not fim_de_jogo:
+
+                if nao_inicializado:
+                    moeda = Moeda(tipo_atual)
+                    moeda.set_posicao(primeiro_espaco_X, primeiro_espaco_Y - EspacoMoedas.TAMANHO)
+                    moeda.set_coluna(0)
+                    nao_inicializado = False
+                    moeda_inserida = False
+
+                moeda.desenha(self.background)
+
+                jogador_atual = self.p1 if turno_p1 else self.p2
+
+                if not turno_humano:
+                    fim_de_jogo = jogador_atual.movimento_completo(moeda, self.borda_do_jogo, self.logica_jogo, self.background)
+                    moeda_inserida = True
+                    nao_inicializado = True
+
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        fim_de_jogo = True
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            fim_de_jogo = True
+                        if event.key == pygame.K_RIGHT and turno_humano:
+                            if (moeda.get_coluna() + 1 < self.colunas_bordas):
+                                moeda.mover_direita(self.background)
+
+                        elif event.key == pygame.K_LEFT and turno_humano:
+                            if (moeda.get_coluna() - 1 >= 0):
+                                moeda.mover_esquerda(self.background)
+
+                        elif event.key == pygame.K_RETURN and turno_humano and not moeda_inserida:
+                            try:
+                                fim_de_jogo = self.borda_do_jogo.insere_moeda(moeda, self.background, self.logica_jogo)
+                                jogador_atual.movimento_completo()
+                                nao_inicializado = True
+                                moeda_inserida = True
+
+                            except ColunaPreenchidaTotalmente as e:
+                                pass
+
+                if fim_de_jogo:
+                    ganhador = self.logica_jogo.determina_nome_ganhador()
+                    ganhador_valor = self.logica_jogo.get_ganhador()
+                    if (ganhador_valor > 0 and modo_jogo == "treino"):
+                        self.lst_vitoria[ganhador_valor - 1] += 1
+                    tela_fim_de_jogo = True
+
+                if moeda_inserida:
+                    if modo_jogo == "sozinho":
+                        turno_humano = not turno_humano
+                    tipo_atual = 1 if tipo_atual == 2 else 2
+                    turno_p1 = not turno_p1
+
+                milliseconds = self.clock.tick(self.fps)
+                self.playtime += self.playtime / 1000.0
+                pygame.display.flip()
+                self.screen.blit(self.background, (0, 0))
+
+            iteracoes -= 1
+
+        if modo_jogo == "treino":
+            index = self.lst_vitoria.index(max(self.lst_vitoria))
+            self.pc_treinado = self.p1 if index == 0 else self.p2
+            self.main_menu()
+        else:
+            self.visao_fim_de_jogo(ganhador)
 
     def desenhar_menu(self):
         font = pygame.font.SysFont('mono', 60, bold=True)
@@ -396,7 +542,7 @@ class VisaoJogo(object):
         self.rect4 = self.quit_surface.get_rect(topleft=((self.width - fw) // 2, 450))
         self.background.blit(self.quit_surface, ((self.width - fw) // 2, 450))
 
-    def visao_geral_jogo(self, ganhador):
+    def visao_fim_de_jogo(self, ganhador):
         tela_fim_jogo = True
         main_menu = False
         self.background.fill(BRANCO)
@@ -457,7 +603,7 @@ class LogicaJogo():
     """Seta as condições de vitória e determina o vencedor"""
     SEQUENCIA_VITORIA_LENGTH = 4
 
-    def inicia(self, borda):
+    def __init__(self, borda):
         self.borda = borda
         (numero_linhas, numero_colunas) = self.borda.get_dimensoes()
         self.linha_borda = numero_linhas
@@ -465,6 +611,7 @@ class LogicaJogo():
         self.valor_ganhador = 0
 
     def checa_fim_de_jogo(self):
+        """Checa se o jogo terminou, que pode ter sido por um empato ou um dos 2 jogadores tiver ganhado"""
         (ultimo_nodo_visitado, valor_jogador) = self.borda.get_informacao_ultimo_preenchido()
         representacao = self.borda.get_representacao()
         jogador_ganhador = self.pesquisa_ganhador(ultimo_nodo_visitado, representacao)
@@ -474,11 +621,33 @@ class LogicaJogo():
         return (jogador_ganhador or self.borda.checa_borda_preenchida())
 
     def pesquisa_ganhador(self, ultimo_nodo_visitado, representacao):
+        """"Determina se algum dos 2 jogadores ganhou"""
         for indices in ultimo_nodo_visitado:
             nodo_atual = representacao[indices[0]][indices[1]]
-            if (nodo_atual.to)
+            if (nodo_atual.top_left_score == LogicaJogo.SEQUENCIA_VITORIA_LENGTH or
+                    nodo_atual.top_score == LogicaJogo.SEQUENCIA_VITORIA_LENGTH or
+                    nodo_atual.top_right_score == LogicaJogo.SEQUENCIA_VITORIA_LENGTH or
+                    nodo_atual.left_score == LogicaJogo.SEQUENCIA_VITORIA_LENGTH or
+                    nodo_atual.right_score == LogicaJogo.SEQUENCIA_VITORIA_LENGTH or
+                    nodo_atual.bottom_left_score == LogicaJogo.SEQUENCIA_VITORIA_LENGTH or
+                    nodo_atual.bottom_score == LogicaJogo.SEQUENCIA_VITORIA_LENGTH or
+                    nodo_atual.bottom_right_score == LogicaJogo.SEQUENCIA_VITORIA_LENGTH):
+                return True
+        return False
 
+    def determina_nome_ganhador(self):
+        if (self.valor_ganhador == 1):
+            return  "AZUL"
+        elif (self.valor_ganhador == 2):
+            return "VERMELHO"
+        else:
+            return True
 
+    def get_ganhador(self):
+        """"Retorna o valor do tipo da moeda do ganhador"""
+        return self.valor_ganhador
+
+#region Jogadores
 
 class Player():
 
@@ -497,7 +666,7 @@ class Player():
 class JogadorHumano(Player):
 
     def __init__(self, tipo_moeda):
-        Player.inicia(self, tipo_moeda)
+        Player.__init__(self, tipo_moeda)
 
 class JogadorPC(Player):
 
@@ -530,7 +699,7 @@ class JogadorRandom(Player):
         Player.__init__(self, tipo_moeda)
 
     def escolher_acao(self, estado, acoes):
-        return  random.choice(acoes)
+        return random.choice(acoes)
 
     def aprender(self, borda, acao, fim_de_jogo, logica_jogo):
         """O jogador aleatório não aprende com suas ações"""
@@ -548,7 +717,7 @@ class JogadorQLearningPlayer(Player):
     def getQ(self, estado, acao):
         if self.q.get((estado, acao)) is None:
             self.q[(estado, acao)] = 1.0
-        return  self.q.get((estado, acao))
+        return self.q.get((estado, acao))
 
     def escolher_acao(self, estado, acoes):
         estado_atual = estado
@@ -585,65 +754,7 @@ class JogadorQLearningPlayer(Player):
         maxqnew = max([self.getQ(estado_resultado, a) for a in acoes])
         self.q[(estado_anterior, acao_escolhida)] = anterior + self.alpha * ((recompensa + self.gamma * maxqnew - anterior))
 
-
-class Moeda():
-
-    RAIO = 30
-
-    def __init__(self, tipo_moeda):
-        self.tipo_moeda = tipo_moeda
-        self.surface = pygame.Surface((EspacoMoedas.TAMANHO - 3, EspacoMoedas.TAMANHO - 3))
-        if self.tipo_moeda == 1:
-            self.cor = AZUL
-        else:
-            self.cor = VERMELHO
-
-    def set_posicao(self, x1, y1):
-        self.x_pos = x1
-        self.y_pos = y1
-
-    def set_coluna(self, coluna):
-        self.coluna = coluna
-
-    def get_coluna(self):
-        return self.coluna
-
-    def set_linha(self, linha):
-        self.linha = linha
-
-    def get_linha(self):
-        return  self.linha
-
-    def mover_direita(self, background, step=1):
-        self.set_coluna(self.coluna + 1)
-        self.surface.fill((0, 0, 0))
-        background.blit(self.surface, (self.x_pos, self.y_pos))
-        self.set_posicao(self.x_pos + step * EspacoMoedas.TAMANHO, self.y_pos)
-        self.desenha(background)
-
-    def mover_esquerda(self, background):
-        self.set_coluna(self.coluna - 1)
-        self.surface.fill((0, 0, 0))
-        background.blit(self.surface, (self.x_pos, self.y_pos))
-        self.set_posicao(self.x_pos - EspacoMoedas.TAMANHO, self.y_pos)
-        self.desenha(background)
-
-    def solta(self, background, numero_linha):
-        self.set_linha(numero_linha)
-        self.surface.fill((0, 0, 0))
-        background.blit(self.surface, (self.x_pos, self.y_pos))
-        self.set_posicao(self.x_pos, self.y_pos + ((self.row + 1) * EspacoMoedas.TAMANHO))
-        self.surface.fill((255, 255, 255))
-        background.blit(self.surface, (self.x_pos, self.y_pos))
-        self.desenha(background)
-
-    def get_tipo_moeda(self):
-        return  self.tipo_moeda
-
-    def desenha(self, background):
-        pygame.draw.circle(self.surface, self.cor, (EspacoMoedas.TAMANHO // 2, EspacoMoedas.TAMANHO // 2), Moeda.RAIO)
-        self.surface = self.surface.convert()
-        background.blit(self.surface, (self.x_pos, self.y_pos))
+#endregion
 
 
 if __name__ == "__main__":
