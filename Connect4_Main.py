@@ -360,8 +360,8 @@ class VisaoJogo(object):
         primeiro_tipo_moeda = random.randint(1, 2)
         segundo_tipo_moeda = 2 if primeiro_tipo_moeda == 1 else 1
 
-        if (modo_de_jogo == "single"):
-            self.pl = JogadorHumano(primeiro_tipo_moeda)
+        if modo_de_jogo == "sozinho":
+            self.p1 = JogadorHumano(primeiro_tipo_moeda)
             if (self.pc_treinado == None):
                 self.p2 = JogadorPC(segundo_tipo_moeda, "qlearner")
                 self.pc_treinado = self.p2
@@ -606,8 +606,8 @@ class LogicaJogo():
     def __init__(self, borda):
         self.borda = borda
         (numero_linhas, numero_colunas) = self.borda.get_dimensoes()
-        self.linha_borda = numero_linhas
-        self.coluna_borda = numero_colunas
+        self.linhas_bordas = numero_linhas
+        self.colunas_bordas = numero_colunas
         self.valor_ganhador = 0
 
     def checa_fim_de_jogo(self):
@@ -618,7 +618,7 @@ class LogicaJogo():
         if jogador_ganhador:
             self.valor_ganhador = valor_jogador
 
-        return (jogador_ganhador or self.borda.checa_borda_preenchida())
+        return ( jogador_ganhador or self.borda.checa_borda_preenchida() )
 
     def pesquisa_ganhador(self, ultimo_nodo_visitado, representacao):
         """"Determina se algum dos 2 jogadores ganhou"""
@@ -633,6 +633,7 @@ class LogicaJogo():
                     nodo_atual.bottom_score == LogicaJogo.SEQUENCIA_VITORIA_LENGTH or
                     nodo_atual.bottom_right_score == LogicaJogo.SEQUENCIA_VITORIA_LENGTH):
                 return True
+
         return False
 
     def determina_nome_ganhador(self):
@@ -641,7 +642,7 @@ class LogicaJogo():
         elif (self.valor_ganhador == 2):
             return "VERMELHO"
         else:
-            return True
+            return "Empate"
 
     def get_ganhador(self):
         """"Retorna o valor do tipo da moeda do ganhador"""
@@ -765,7 +766,7 @@ class JogadorQLearningPlayer(Player):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('iterations', nargs='?', default=20, action="store",
+    parser.add_argument('iterations', nargs='?', default=50, action="store",
                         help="Armazene o número de iterações para treinar o computador")
     args = parser.parse_args()
 
