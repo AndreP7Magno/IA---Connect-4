@@ -16,18 +16,20 @@ class ColunaPreenchidaTotalmente(Exception):
         self.valor = valor
 
     def __str__(self):
-        return  repr(self.valor)
+        return repr(self.valor)
+
 
 class EspacoMoedas():
-
+    """Representa um espaço no quadro"""
     TAMANHO = 80
 
     def __init__(self, linha_index, coluna_index, width, height, x1, y1):
+        """Inicializa um espaço em uma determinada posição no quadro"""
         self.content = 0
         self.linha_index = linha_index
         self.coluna_index = coluna_index
         self.width = width
-        self.heigth = height
+        self.height = height
         self.surface = pygame.Surface((width * 2, height * 2))
         self.x_pos = x1
         self.y_pos = y1
@@ -38,7 +40,7 @@ class EspacoMoedas():
     def get_posicao(self):
         return (self.x_pos, self.y_pos)
 
-    def set_moeda (self, moeda):
+    def set_moeda(self, moeda):
         self.content = moeda.get_tipo_moeda()
 
     def checa_espaco_preenchido(self):
@@ -48,14 +50,17 @@ class EspacoMoedas():
         return self.content
 
     def desenha(self, background):
-        pygame.draw.rect(self.surface, VERDE, (0, 0, self.width, self.heigth))
-        pygame.draw.rect(self.surface, BRANCO, (1, 1, self.width - 2, self.heigth -2))
+        pygame.draw.rect(self.surface, VERDE, (0, 0, self.width, self.height))
+        pygame.draw.rect(self.surface, BRANCO, (1, 1, self.width - 2, self.height - 2))
         self.surface = self.surface.convert()
         background.blit(self.surface, (self.x_pos, self.y_pos))
 
+
 class RastreadorNodo():
+    """Representa o nodo na representação gráfica interna do tabuleiro do jogo"""
 
     def __init__(self):
+        """Inicializa com ponteiros para os nodos em todas as 8 direções ao redor"""
         self.top_left = None
         self.top_right = None
         self.top = None
@@ -63,7 +68,7 @@ class RastreadorNodo():
         self.right = None
         self.bottom_left = None
         self.bottom = None
-        self.bottom_rigth = None
+        self.bottom_right = None
         self.top_left_score = 1
         self.top_right_score = 1
         self.top_score = 1
@@ -75,17 +80,15 @@ class RastreadorNodo():
         self.value = 0
         self.visited = False
 
-class Borda():
 
-    MARGE_X = 350
-    MARGE_Y = 150
+class Borda():
+    MARGEM_X = 350
+    MARGEM_Y = 150
 
     def __init__(self, numero_linhas, numero_colunas):
         self.container = [[EspacoMoedas(i, j, EspacoMoedas.TAMANHO, EspacoMoedas.TAMANHO,
-                                        j * EspacoMoedas.TAMANHO + Borda.MARGE_X,
-                                        i * EspacoMoedas.TAMANHO + Borda.MARGE_Y)
-                           for j in range(numero_colunas)]
-                           for i in range (numero_linhas)]
+                                        j * EspacoMoedas.TAMANHO + Borda.MARGEM_X,
+                                        i * EspacoMoedas.TAMANHO + Borda.MARGEM_Y) for j in range(numero_colunas)] for i in range(numero_linhas)]
         self.numero_linhas = numero_linhas
         self.numero_colunas = numero_colunas
         self.total_espacos = numero_linhas * numero_colunas
@@ -93,7 +96,7 @@ class Borda():
         self.ultimo_nodo_visitado = []
         self.ultimo_valor = 0
 
-        self.estado = [[0 for j in range(numero_colunas) for i in range(numero_linhas)]]
+        self.estado = [[0 for j in range(numero_colunas)] for i in range(numero_linhas)]
         self.estado_anterior = None
         self.movimento_anterior = (None, None, None)
 
@@ -110,9 +113,9 @@ class Borda():
                 if linha_index_anterior >= 0:
                     nodo_atual.top = self.representacao[linha_index_anterior][j]
                 if linha_index_anterior >= 0 and coluna_index_proxima < numero_colunas:
-                    nodo_atual.top_right = self.representacao[linha_index_anterior][coluna_index_anterior]
+                    nodo_atual.top_right = self.representacao[linha_index_anterior][coluna_index_proxima]
                 if coluna_index_anterior >= 0:
-                   nodo_atual.left = self.representacao[i][coluna_index_anterior]
+                    nodo_atual.left = self.representacao[i][coluna_index_anterior]
 
                 if coluna_index_proxima < numero_colunas:
                     nodo_atual.right = self.representacao[i][coluna_index_proxima]
@@ -122,9 +125,10 @@ class Borda():
                 if linha_index_proxima < numero_linhas:
                     nodo_atual.bottom = self.representacao[linha_index_proxima][j]
                 if linha_index_proxima < numero_linhas and coluna_index_proxima < numero_colunas:
-                    nodo_atual.bottom_rigth = self.representacao[linha_index_proxima][coluna_index_proxima]
+                    nodo_atual.bottom_right = self.representacao[linha_index_proxima][coluna_index_proxima]
 
     def desenha(self, background):
+        """Desenha a borda inteira na tela"""
         for i in range(self.numero_linhas):
             for j in range(self.numero_colunas):
                 self.container[i][j].desenha(background)
@@ -137,8 +141,8 @@ class Borda():
         for i in range(len(self.container)):
             # se um espaço não estiver preenchido então a coluna não está preenchida
             if not self.container[i][numero_coluna].checa_espaco_preenchido():
-                return  False
-        return  True
+                return False
+        return True
 
     def insere_moeda(self, moeda, background, logica_jogo):
         """Insere a moeda na borda e atualiza o seu estado e representação interna"""
@@ -179,14 +183,14 @@ class Borda():
         return (self.total_espacos == self.numero_espacos_preenchidos)
 
     def get_representacao(self):
-        return  self.representacao
+        return self.representacao
 
     def get_acoes_disponiveis(self):
         acoes = []
         for i in range(self.numero_colunas):
             if (not self.checa_coluna_preenchida(i)):
                 acoes.append(i)
-        return  acoes
+        return acoes
 
     def get_estado(self):
         result = tuple(tuple(x) for x in self.estado)
@@ -196,7 +200,7 @@ class Borda():
     def get_estado_anterior(self):
         result = tuple(tuple(x) for x in self.estado_anterior)
 
-        return  result
+        return result
 
     def get_ultima_informacao_preenchida(self):
         return (self.ultimo_nodo_visitado, self.ultimo_valor)
@@ -211,10 +215,7 @@ class Borda():
             self.representacao[indices[0]][indices[1]].visited = False
 
     def atravessa(self, nodo_atual, valor_desejado, i, j, nodos_visitados):
-        """
-        Atualizar recursivamente as pontuações dos nós relevantes com base em seus
-        nós adjacentes.
-        """
+        """Atualiza recursivamente as pontuações dos nodos relevantes com base em seus nós adjacentes"""
 
         nodo_atual.visited = True
         nodos_visitados.append((i, j))
@@ -244,38 +245,38 @@ class Borda():
             if nodo_left.value == valor_desejado:
                 nodo_atual.left_score = nodo_left.left_score + 1
                 if not nodo_left.visited:
-                    self.traverse(nodo_left, valor_desejado, i, j - 1, nodos_visitados)
+                    self.atravessa(nodo_left, valor_desejado, i, j - 1, nodos_visitados)
 
         if nodo_atual.right:
             nodo_rigth = nodo_atual.right
             if nodo_rigth.value == valor_desejado:
                 nodo_atual.right_score = nodo_rigth.right_score + 1
                 if not nodo_rigth.visited:
-                    self.traverse(nodo_rigth, valor_desejado, i, j + 1, nodos_visitados)
+                    self.atravessa(nodo_rigth, valor_desejado, i, j + 1, nodos_visitados)
 
         if nodo_atual.bottom_left:
             nodo_bottom_left = nodo_atual.bottom_left
             if nodo_bottom_left.value == valor_desejado:
                 nodo_atual.bottom_left_score = nodo_bottom_left.bottom_left_score + 1
                 if not nodo_bottom_left.visited:
-                    self.traverse(nodo_bottom_left, valor_desejado, i + 1, j - 1, nodos_visitados)
+                    self.atravessa(nodo_bottom_left, valor_desejado, i + 1, j - 1, nodos_visitados)
 
         if nodo_atual.bottom:
             nodo_bottom = nodo_atual.bottom
             if nodo_bottom.value == valor_desejado:
                 nodo_atual.bottom_score = nodo_bottom.bottom_score + 1
                 if not nodo_bottom.visited:
-                    self.traverse(nodo_bottom, valor_desejado, i + 1, j, nodos_visitados)
+                    self.atravessa(nodo_bottom, valor_desejado, i + 1, j, nodos_visitados)
 
         if nodo_atual.bottom_right:
-            nodo_bottom_rigth = nodo_atual.bottom_right
-            if nodo_bottom_rigth.value == valor_desejado:
-                nodo_atual.bottom_right_score = nodo_bottom_rigth.bottom_right_score + 1
-                if not nodo_bottom_rigth.visited:
-                    self.traverse(nodo_bottom_rigth, valor_desejado, i + 1, j + 1, nodos_visitados)
+            nodo_bottom_right = nodo_atual.bottom_right
+            if nodo_bottom_right.value == valor_desejado:
+                nodo_atual.bottom_right_score = nodo_bottom_right.bottom_right_score + 1
+                if not nodo_bottom_right.visited:
+                    self.atravessa(nodo_bottom_right, valor_desejado, i + 1, j + 1, nodos_visitados)
+
 
 class Moeda():
-
     RAIO = 30
 
     def __init__(self, tipo_moeda):
@@ -300,7 +301,7 @@ class Moeda():
         self.linha = linha
 
     def get_linha(self):
-        return  self.linha
+        return self.linha
 
     def mover_direita(self, background, step=1):
         self.set_coluna(self.coluna + 1)
@@ -320,13 +321,13 @@ class Moeda():
         self.set_linha(numero_linha)
         self.surface.fill((0, 0, 0))
         background.blit(self.surface, (self.x_pos, self.y_pos))
-        self.set_posicao(self.x_pos, self.y_pos + ((self.row + 1) * EspacoMoedas.TAMANHO))
+        self.set_posicao(self.x_pos, self.y_pos + ((self.linha + 1) * EspacoMoedas.TAMANHO))
         self.surface.fill((255, 255, 255))
         background.blit(self.surface, (self.x_pos, self.y_pos))
         self.desenha(background)
 
     def get_tipo_moeda(self):
-        return  self.tipo_moeda
+        return self.tipo_moeda
 
     def desenha(self, background):
         pygame.draw.circle(self.surface, self.cor, (EspacoMoedas.TAMANHO // 2, EspacoMoedas.TAMANHO // 2), Moeda.RAIO)
@@ -349,14 +350,14 @@ class VisaoJogo(object):
         self.playtime = 0.0
         self.font = pygame.font.SysFont('mono', 20, bold=True)
         self.pc_treinado = None
-        self.lst_vitoria = [0.0]
+        self.lst_vitoria = [0, 0]
 
     def inicializa_variaveis(self, modo_de_jogo):
         """Inicializa a borda do jogo e objeto de lógica"""
         self.borda_do_jogo = Borda(TAMANHO_BORDA[0], TAMANHO_BORDA[1])
         (self.linhas_bordas, self.colunas_bordas) = self.borda_do_jogo.get_dimensoes()
         self.logica_jogo = LogicaJogo(self.borda_do_jogo)
-        primeiro_tipo_moeda = random.randint(1,2)
+        primeiro_tipo_moeda = random.randint(1, 2)
         segundo_tipo_moeda = 2 if primeiro_tipo_moeda == 1 else 1
 
         if (modo_de_jogo == "single"):
@@ -365,14 +366,14 @@ class VisaoJogo(object):
                 self.p2 = JogadorPC(segundo_tipo_moeda, "qlearner")
                 self.pc_treinado = self.p2
             else:
-                self.pc_treinado.set_tipo_player(segundo_tipo_moeda)
+                self.pc_treinado.set_tipo_moeda(segundo_tipo_moeda)
                 self.p2 = self.pc_treinado
         elif modo_de_jogo == "2_player":
             self.p1 = JogadorHumano(primeiro_tipo_moeda)
             self.p2 = JogadorHumano(segundo_tipo_moeda)
         else:
             self.pc_treinado = None
-            self.lst_vitoria = [0.0]
+            self.lst_vitoria = [0, 0]
             self.p1 = JogadorPC(primeiro_tipo_moeda, "qlearner")
             self.p2 = JogadorPC(segundo_tipo_moeda, "qlearner")
 
@@ -421,7 +422,7 @@ class VisaoJogo(object):
 
     def run(self, modo_jogo, iteracoes=1):
         """Principal loop no jogo"""
-        while(iteracoes > 0):
+        while (iteracoes > 0):
             self.inicializa_variaveis(modo_jogo)
             self.background.fill(PRETO)
             self.borda_do_jogo.desenha(self.background)
@@ -456,7 +457,8 @@ class VisaoJogo(object):
                 jogador_atual = self.p1 if turno_p1 else self.p2
 
                 if not turno_humano:
-                    fim_de_jogo = jogador_atual.movimento_completo(moeda, self.borda_do_jogo, self.logica_jogo, self.background)
+                    fim_de_jogo = jogador_atual.movimento_completo(moeda, self.borda_do_jogo, self.logica_jogo,
+                                                                   self.background)
                     moeda_inserida = True
                     nao_inicializado = True
 
@@ -469,18 +471,15 @@ class VisaoJogo(object):
                         if event.key == pygame.K_RIGHT and turno_humano:
                             if (moeda.get_coluna() + 1 < self.colunas_bordas):
                                 moeda.mover_direita(self.background)
-
                         elif event.key == pygame.K_LEFT and turno_humano:
                             if (moeda.get_coluna() - 1 >= 0):
                                 moeda.mover_esquerda(self.background)
-
                         elif event.key == pygame.K_RETURN and turno_humano and not moeda_inserida:
                             try:
                                 fim_de_jogo = self.borda_do_jogo.insere_moeda(moeda, self.background, self.logica_jogo)
                                 jogador_atual.movimento_completo()
                                 nao_inicializado = True
                                 moeda_inserida = True
-
                             except ColunaPreenchidaTotalmente as e:
                                 pass
 
@@ -498,7 +497,7 @@ class VisaoJogo(object):
                     turno_p1 = not turno_p1
 
                 milliseconds = self.clock.tick(self.fps)
-                self.playtime += self.playtime / 1000.0
+                self.playtime += milliseconds / 1000.0
                 pygame.display.flip()
                 self.screen.blit(self.background, (0, 0))
 
@@ -573,7 +572,7 @@ class VisaoJogo(object):
 
     def desenha_fim_de_jogo(self, ganhador):
         font = pygame.font.SysFont('mono', 60, bold=True)
-        texto_fim_de_jogo = 'GAME OVER'
+        texto_fim_de_jogo = 'FIM DE JOGO'
         self.titulo_surface = font.render(texto_fim_de_jogo, True, VERDE)
         fw, fh = font.size(texto_fim_de_jogo)
         self.background.blit(self.titulo_surface, ((self.width - fw) // 2, 150))
@@ -599,6 +598,7 @@ class VisaoJogo(object):
         self.rect2 = self.quit_surface.get_rect(topleft=((self.width - fw) // 2, 410))
         self.background.blit(self.quit_surface, ((self.width - fw) // 2, 410))
 
+
 class LogicaJogo():
     """Seta as condições de vitória e determina o vencedor"""
     SEQUENCIA_VITORIA_LENGTH = 4
@@ -612,7 +612,7 @@ class LogicaJogo():
 
     def checa_fim_de_jogo(self):
         """Checa se o jogo terminou, que pode ter sido por um empato ou um dos 2 jogadores tiver ganhado"""
-        (ultimo_nodo_visitado, valor_jogador) = self.borda.get_informacao_ultimo_preenchido()
+        (ultimo_nodo_visitado, valor_jogador) = self.borda.get_ultima_informacao_preenchida()
         representacao = self.borda.get_representacao()
         jogador_ganhador = self.pesquisa_ganhador(ultimo_nodo_visitado, representacao)
         if jogador_ganhador:
@@ -637,7 +637,7 @@ class LogicaJogo():
 
     def determina_nome_ganhador(self):
         if (self.valor_ganhador == 1):
-            return  "AZUL"
+            return "AZUL"
         elif (self.valor_ganhador == 2):
             return "VERMELHO"
         else:
@@ -647,7 +647,8 @@ class LogicaJogo():
         """"Retorna o valor do tipo da moeda do ganhador"""
         return self.valor_ganhador
 
-#region Jogadores
+
+# region Jogadores
 
 class Player():
 
@@ -655,6 +656,7 @@ class Player():
         self.tipo_moeda = tipo_moeda
 
     def movimento_completo(self):
+        """Faz uma mudança e atualiza qualquer parâmetro de aprendizado, se houver"""
         pass
 
     def get_tipo_moeda(self):
@@ -663,10 +665,12 @@ class Player():
     def set_tipo_moeda(self, tipo_moeda):
         self.tipo_moeda = tipo_moeda
 
+
 class JogadorHumano(Player):
 
     def __init__(self, tipo_moeda):
         Player.__init__(self, tipo_moeda)
+
 
 class JogadorPC(Player):
 
@@ -679,19 +683,20 @@ class JogadorPC(Player):
     def movimento_completo(self, moeda, borda, logica_jogo, background):
         acoes = borda.get_acoes_disponiveis()
         estado = borda.get_estado()
-        acao_escolhida = self.acao_escolhida(estado, acoes)
+        acao_escolhida = self.escolher_acao(estado, acoes)
         moeda.mover_direita(background, acao_escolhida)
         moeda.set_coluna(acao_escolhida)
         fim_de_jogo = borda.insere_moeda(moeda, background, logica_jogo)
-        self.jogador.learn(borda, acoes, acao_escolhida, fim_de_jogo, logica_jogo)
+        self.jogador.aprender(borda, acoes, acao_escolhida, fim_de_jogo, logica_jogo)
 
         return fim_de_jogo
 
     def get_tipo_moeda(self):
-        return  self.jogador.get_tipo_moeda()
+        return self.jogador.get_tipo_moeda()
 
-    def acao_escolhida(self, estado, acoes):
+    def escolher_acao(self, estado, acoes):
         return self.jogador.escolher_acao(estado, acoes)
+
 
 class JogadorRandom(Player):
 
@@ -705,12 +710,13 @@ class JogadorRandom(Player):
         """O jogador aleatório não aprende com suas ações"""
         pass
 
+
 class JogadorQLearningPlayer(Player):
 
-    def __init__(self, tipo_moeda, epsilon=0.2, alpha= 0.3, gamma= 0.9):
+    def __init__(self, tipo_moeda, epsilon=0.2, alpha=0.3, gamma=0.9):
         Player.__init__(self, tipo_moeda)
         self.q = {}
-        self.epsilon = epsilon  # change de exploração aleatória e-greedy chance of random exploration
+        self.epsilon = epsilon  # chance de exploração aleatória
         self.alpha = alpha  # taxa de aprendizado
         self.gamma = gamma  # fator de desconto para recompensas futuras
 
@@ -722,26 +728,26 @@ class JogadorQLearningPlayer(Player):
     def escolher_acao(self, estado, acoes):
         estado_atual = estado
 
-        if random.random() < self.epsilon:
+        if random.random() <= self.epsilon:
             acao_escolhida = random.choice(acoes)
-            return  acao_escolhida
+            return acao_escolhida
 
         qs = [self.getQ(estado_atual, a) for a in acoes]
         maxQ = max(qs)
 
         if qs.count(maxQ) > 1:
-            # mais de uma melhor opção; escolha entre eles aleatoriamente
+            # mais de uma melhor opção
             melhores_opcoes = [i for i in range(len(acoes)) if qs[i] == maxQ]
             i = random.choice(melhores_opcoes)
         else:
             i = qs.index(maxQ)
 
-        return  acoes[i]
+        return acoes[i]
 
     def aprender(self, borda, acoes, acao_escolhida, fim_de_jogo, logica_jogo):
         recompensa = 0
         if (fim_de_jogo):
-            valor_ganhador = logica_jogo.get_ganhador();
+            valor_ganhador = logica_jogo.get_ganhador()
             if valor_ganhador == 0:
                 recompensa = 0.5
             elif valor_ganhador == self.tipo_moeda:
@@ -752,9 +758,9 @@ class JogadorQLearningPlayer(Player):
         anterior = self.getQ(estado_anterior, acao_escolhida)
         estado_resultado = borda.get_estado()
         maxqnew = max([self.getQ(estado_resultado, a) for a in acoes])
-        self.q[(estado_anterior, acao_escolhida)] = anterior + self.alpha * ((recompensa + self.gamma * maxqnew - anterior))
+        self.q[(estado_anterior, acao_escolhida)] = anterior + self.alpha * ((recompensa + self.gamma * maxqnew) - anterior)
 
-#endregion
+# endregion
 
 
 if __name__ == "__main__":
