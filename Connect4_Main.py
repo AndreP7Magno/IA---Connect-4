@@ -377,7 +377,7 @@ class VisaoJogo(object):
             self.p1 = JogadorPC(primeiro_tipo_moeda, "qlearner")
             self.p2 = JogadorPC(segundo_tipo_moeda, "qlearner")
 
-    def main_menu(self, iteracoes=20):
+    def main_menu(self, iteracoes=40):
         main_menu = True
         jogar_jogo = False
         self.background.fill(BRANCO)
@@ -714,7 +714,7 @@ class JogadorRandom(Player):
 
 class JogadorQLearningPlayer(Player):
 
-    def __init__(self, tipo_moeda, epsilon=0.2, alpha=0.3, gamma=0.9):
+    def __init__(self, tipo_moeda, epsilon=0.2, alpha=0.8, gamma=0.5):
         Player.__init__(self, tipo_moeda)
         self.q = {}
         self.epsilon = epsilon  # chance de exploração aleatória
@@ -766,7 +766,7 @@ class JogadorQLearningPlayer(Player):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('iterations', nargs='?', default=50, action="store",
+    parser.add_argument('iterations', nargs='?', default=40, action="store",
                         help="Armazene o número de iterações para treinar o computador")
     args = parser.parse_args()
 
